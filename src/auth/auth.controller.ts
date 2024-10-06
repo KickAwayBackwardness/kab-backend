@@ -8,12 +8,14 @@ import {
   Delete,
   Req,
   Res,
+  UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { UpdateAuthDto } from './dto/update-auth.dto';
 import { LoginDto } from './dto/login-auth.dto';
 import { Request, Response } from 'express';
 import { SignupDto } from './dto/signup-auth.dto';
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller('auth')
 export class AuthController {
@@ -30,10 +32,11 @@ export class AuthController {
   loginAdmin(@Res() res: Response, @Body() loginDto: LoginDto) {
     return this.authService.loginAdmin(res, loginDto);
   }
-
-  @Get()
-  findAll() {
-    return this.authService.findAll();
+  // Check PERMISSION
+  @UseGuards(AuthGuard('jwt'))
+  @Post('admin/check-admin-permission')
+  checkPermisson(@Req() req: Request, @Res() res: Response) {
+    return this.authService.checkPermission(req, res);
   }
 
   @Get(':id')
