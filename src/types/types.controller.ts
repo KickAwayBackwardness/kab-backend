@@ -35,18 +35,29 @@ export class TypesController {
     return this.typesService.getAllTypes(res);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.typesService.findOne(+id);
+  @Get('get-one/:type_id')
+  getOneType(@Param('type_id') type_id: number, @Res() res: Response) {
+    return this.typesService.getOneType(type_id, res);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateTypeDto: UpdateTypeDto) {
-    return this.typesService.update(+id, updateTypeDto);
+  @UseGuards(AuthGuard('jwt'))
+  @Patch('update/:type_id')
+  updateType(
+    @Param('type_id') type_id: number,
+    @Body() updateTypeDto: UpdateTypeDto,
+    @Req() req: Request,
+    @Res() res: Response,
+  ) {
+    return this.typesService.updateType(req, res, type_id, updateTypeDto);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.typesService.remove(+id);
+  @UseGuards(AuthGuard('jwt'))
+  @Patch('inactive/:type_id')
+  inactiveType(
+    @Param('type_id') type_id: number,
+    @Req() req: Request,
+    @Res() res: Response,
+  ) {
+    return this.typesService.inactiveType(req, res, type_id);
   }
 }

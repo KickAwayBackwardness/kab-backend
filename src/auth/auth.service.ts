@@ -83,7 +83,7 @@ export class AuthService {
       });
       if (!foundUser) {
         throw new HttpException(
-          'Tên đăng nhập không đúng.',
+          'Tên đăng nhập không tồn tại.',
           HttpStatus.NOT_FOUND,
         );
       }
@@ -93,6 +93,14 @@ export class AuthService {
         throw new HttpException(
           'Mật khẩu không đúng.',
           HttpStatus.NOT_ACCEPTABLE,
+        );
+      }
+
+      // VIWER KHONG DUOC PHEP TRUY CAP
+      if (foundUser.permission_id === 3) {
+        throw new HttpException(
+          'Bạn không có quyền truy cập.',
+          HttpStatus.FORBIDDEN,
         );
       }
 
@@ -137,8 +145,51 @@ export class AuthService {
     }
   }
 
-  findAll() {
-    return `This action returns all auth`;
+  async checkPermission(req: Request, res: Response) {
+    try {
+      const { authorization } = req.headers;
+      const token = authorization.replace('Bearer ', '');
+      const { user_id }: any = tokenMajors.decodeToken(token).data;
+
+      const user = await this.prisma.users.findUnique({
+        where: { user_id },
+        include: {
+          permissions: true,
+        },
+      });
+      // xac dinh token hop le khong
+      if (!user) {
+        throw new HttpException(
+          'Vui lòng đăng nhập để tiếp tục.',
+          HttpStatus.UNAUTHORIZED,
+        );
+      }
+
+      const isAdmin =
+        user.permissions.permission_name === 'ADMIN' ? true : false;
+
+      responseData(
+        res,
+        'Lấy quyền truy cập ADMIN thành công.',
+        { isAdmin },
+        HttpStatus.CREATED,
+      );
+    } catch (exception) {
+      if (exception.status !== 500) {
+        return responseData(
+          res,
+          exception.response || 'Đã có lỗi xảy ra.',
+          null,
+          exception.status || 400,
+        );
+      }
+      responseData(
+        res,
+        'Đã có lỗi xảy ra - với tính năng thêm loại bài viết.',
+        null,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   findOne(id: number) {
